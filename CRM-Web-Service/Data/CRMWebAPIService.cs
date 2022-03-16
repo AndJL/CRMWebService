@@ -1,4 +1,5 @@
 ﻿using CRM_Web_Service.Exception;
+using CRM_Web_Service.QueryBuilders.Definitions;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
@@ -19,12 +20,14 @@ namespace CRM_Web_Service.Data
             _httpClient = clientFactory.CreateClient("ServiceClient");
         }
 
-        public async Task<IEnumerable<T>> GetAsync(string entityName, string queryOptions)
+        public async Task<IEnumerable<T>> GetAsync(string entityName, FilterDefinition<T> filter)
         {
             try
             {
                 if (string.IsNullOrWhiteSpace(entityName))
                     throw new ArgumentException("Request is missing entityName");
+
+                var queryOptions = GetQueryOptions(filter);
                 if (string.IsNullOrWhiteSpace(queryOptions))
                     throw new ArgumentException("Request is missing query");
 
@@ -39,12 +42,14 @@ namespace CRM_Web_Service.Data
             }
         }
 
-        public async Task<T> GetSingleAsync(string entityName, string queryOptions)
+        public async Task<T> GetSingleAsync(string entityName, FilterDefinition<T> filter)
         {
             try
             {
                 if (string.IsNullOrWhiteSpace(entityName))
                     throw new ArgumentException("Request is missing entityName");
+
+                var queryOptions = GetQueryOptions(filter);
                 if (string.IsNullOrWhiteSpace(queryOptions))
                     throw new ArgumentException("Request is missing query");
 
@@ -81,6 +86,13 @@ namespace CRM_Web_Service.Data
                 _logger.LogError(e.Message, e);
                 throw new BadRequestException(e.Message);
             }
+        }
+
+        private string GetQueryOptions(FilterDefinition<T> filter)
+        {
+            string queryOptions = filter.Render();
+
+            return queryOptions;
         }
     }
 
